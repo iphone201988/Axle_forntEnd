@@ -1,74 +1,126 @@
-import { useState } from "react";
-import { DollarSign, CreditCard, TrendingUp, AlertCircle, Download, Eye, RefreshCw, Search } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useState, useMemo } from "react";
+import { DollarSign, CreditCard, TrendingUp, AlertCircle, Download, Eye, RefreshCw, Search, X, Calendar, CheckCircle, Clock, ChevronLeft, ChevronRight, User, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { payments } from "@/data/dummyData";
-
-const paymentStats = [
-  {
-    title: "Total Revenue",
-    value: "$89,432",
-    change: "+12.3%",
-    icon: DollarSign,
-    iconBg: "bg-green-100",
-    iconColor: "text-green-600",
-  },
-  {
-    title: "Total Transactions",
-    value: "1,247",
-    change: "+8.1%", 
-    icon: CreditCard,
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
-  },
-  {
-    title: "Successful Payments",
-    value: "98.2%",
-    change: "+0.3%",
-    icon: TrendingUp,
-    iconBg: "bg-purple-100",
-    iconColor: "text-purple-600",
-  },
-  {
-    title: "Failed Payments",
-    value: "23",
-    change: "-2.1%",
-    icon: AlertCircle,
-    iconBg: "bg-red-100",
-    iconColor: "text-red-600",
-  },
-];
+import { PaymentRecord } from "@/types";
 
 const statusColors = {
-  completed: "bg-green-100 text-green-800",
-  pending: "bg-yellow-100 text-yellow-800",
-  failed: "bg-red-100 text-red-800",
+  completed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+  pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+  failed: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
 };
 
 const methodColors = {
-  "Credit Card": "bg-blue-100 text-blue-800",
-  "PayPal": "bg-purple-100 text-purple-800",
-  "Bank Transfer": "bg-green-100 text-green-800",
-  "Digital Wallet": "bg-orange-100 text-orange-800",
+  "Credit Card": "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+  "PayPal": "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
+  "Bank Transfer": "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+  "Digital Wallet": "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
 };
+
+const ITEMS_PER_PAGE = 8;
 
 export default function Payments() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [methodFilter, setMethodFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("all");
+  const [dateFromFilter, setDateFromFilter] = useState("");
+  const [dateToFilter, setDateToFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null);
 
-  const filteredPayments = payments.filter(payment => {
-    const matchesSearch = payment.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         payment.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         payment.provider.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || payment.status === statusFilter;
-    const matchesMethod = methodFilter === "all" || payment.method === methodFilter;
+  // Get unique payment methods for filter
+  const paymentMethods = payments.reduce((acc: string[], payment) => {
+    if (!acc.includes(payment.method)) {
+      acc.push(payment.method);
+    }
+    return acc;
+  }, []);
+
+  // Filter and search payments
+  const filteredPayments = useMemo(() => {
+    return payments.filter(payment => {
+      const matchesSearch = payment.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           payment.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           payment.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           payment.service.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === "all" || payment.status === statusFilter;
+      const matchesMethod = methodFilter === "all" || payment.method === methodFilter;
+      
+      let matchesDateRange = true;
+      if (dateFromFilter && dateToFilter) {
+        const paymentDate = new Date(payment.date);
+        const fromDate = new Date(dateFromFilter);
+        const toDate = new Date(dateToFilter);
+        matchesDateRange = paymentDate >= fromDate && paymentDate <= toDate;
+      } else if (dateFromFilter) {
+        const paymentDate = new Date(payment.date);
+        const fromDate = new Date(dateFromFilter);
+        matchesDateRange = paymentDate >= fromDate;
+      } else if (dateToFilter) {
+        const paymentDate = new Date(payment.date);
+        const toDate = new Date(dateToFilter);
+        matchesDateRange = paymentDate <= toDate;
+      }
+      
+      return matchesSearch && matchesStatus && matchesMethod && matchesDateRange;
+    });
+  }, [searchTerm, statusFilter, methodFilter, dateFromFilter, dateToFilter]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredPayments.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedPayments = filteredPayments.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // Statistics
+  const stats = useMemo(() => {
+    const total = payments.length;
+    const completed = payments.filter(p => p.status === 'completed').length;
+    const pending = payments.filter(p => p.status === 'pending').length;
+    const failed = payments.filter(p => p.status === 'failed').length;
+    const totalRevenue = payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
+    const avgTransaction = totalRevenue / completed || 0;
+    const successRate = ((completed / total) * 100) || 0;
     
-    return matchesSearch && matchesStatus && matchesMethod;
-  });
+    return {
+      total,
+      completed,
+      pending,
+      failed,
+      totalRevenue,
+      avgTransaction,
+      successRate
+    };
+  }, []);
+
+  // Filtered totals
+  const filteredTotals = useMemo(() => {
+    const totalAmount = filteredPayments.reduce((sum, payment) => sum + payment.amount, 0);
+    const completedAmount = filteredPayments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
+    return { totalAmount, completedAmount };
+  }, [filteredPayments]);
+
+  const handleViewPayment = (payment: PaymentRecord) => {
+    setSelectedPayment(payment);
+    setIsViewDialogOpen(true);
+  };
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setMethodFilter("all");
+    setDateFromFilter("");
+    setDateToFilter("");
+    setCurrentPage(1);
+  };
 
   const exportPayments = () => {
     const csvContent = [
@@ -89,211 +141,501 @@ export default function Payments() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "payments_export.csv";
+    a.download = `payments_export_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const getPaymentIcon = (method: string) => {
+    switch (method) {
+      case 'Credit Card':
+        return <CreditCard className="h-4 w-4" />;
+      case 'PayPal':
+        return <DollarSign className="h-4 w-4" />;
+      case 'Bank Transfer':
+        return <TrendingUp className="h-4 w-4" />;
+      case 'Digital Wallet':
+        return <Phone className="h-4 w-4" />;
+      default:
+        return <DollarSign className="h-4 w-4" />;
+    }
+  };
+
   return (
-    <>
-      <div className="mb-6">
-        <div className="sm:flex sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Payments Management</h2>
-            <p className="mt-2 text-sm text-gray-700">Track transactions, payment status, and payout history</p>
-          </div>
-          <div className="mt-4 sm:mt-0 flex space-x-3">
-            <Button variant="outline" onClick={exportPayments}>
-              <Download className="h-4 w-4 mr-2" />
-              Export Data
-            </Button>
-            <Button className="bg-primary hover:bg-primary/90">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh Data
-            </Button>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Payments Management</h2>
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">Track transactions, payment status, and revenue</p>
+        </div>
+        <div className="flex space-x-3">
+          <Button variant="outline" onClick={exportPayments}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Data
+          </Button>
+          <Button className="bg-primary hover:bg-primary/90">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh Data
+          </Button>
         </div>
       </div>
 
-      {/* Payment Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        {paymentStats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={index} className="overflow-hidden shadow">
-              <CardContent className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className={`w-8 h-8 ${stat.iconBg} rounded-lg flex items-center justify-center`}>
-                      <Icon className={`h-5 w-5 ${stat.iconColor}`} />
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">{stat.title}</dt>
-                      <dd className="text-lg font-medium text-gray-900">{stat.value}</dd>
-                    </dl>
-                  </div>
-                </div>
-              </CardContent>
-              <div className="bg-gray-50 px-5 py-3">
-                <div className="text-sm">
-                  <span className={`${stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'} font-medium`}>
-                    {stat.change}
-                  </span>
-                  <span className="text-gray-500"> from last month</span>
-                </div>
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <DollarSign className="h-4 w-4 text-green-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">${stats.totalRevenue.toFixed(0)}</p>
               </div>
-            </Card>
-          );
-        })}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <CreditCard className="h-4 w-4 text-blue-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Transactions</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.total}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
+                <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Clock className="h-4 w-4 text-yellow-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending</p>
+                <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Failed</p>
+                <p className="text-2xl font-bold text-red-600">{stats.failed}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <TrendingUp className="h-4 w-4 text-purple-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Avg Transaction</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">${stats.avgTransaction.toFixed(0)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <TrendingUp className="h-4 w-4 text-green-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Success Rate</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.successRate.toFixed(1)}%</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input 
+                  placeholder="Search payments..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={methodFilter} onValueChange={setMethodFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Payment Method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Methods</SelectItem>
+                  {paymentMethods.map(method => (
+                    <SelectItem key={method} value={method}>{method}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Input 
-                placeholder="Search payments..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                type="date" 
+                placeholder="From Date"
+                value={dateFromFilter}
+                onChange={(e) => setDateFromFilter(e.target.value)}
+              />
+              <Input 
+                type="date" 
+                placeholder="To Date"
+                value={dateToFilter}
+                onChange={(e) => setDateToFilter(e.target.value)}
               />
             </div>
+            <Button variant="outline" onClick={resetFilters}>
+              <X className="h-4 w-4 mr-2" />
+              Clear Filters
+            </Button>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-            <Select value={methodFilter} onValueChange={setMethodFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Methods" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Methods</SelectItem>
-                <SelectItem value="Credit Card">Credit Card</SelectItem>
-                <SelectItem value="PayPal">PayPal</SelectItem>
-                <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                <SelectItem value="Digital Wallet">Digital Wallet</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-            <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Time" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Time</SelectItem>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-                <SelectItem value="quarter">This Quarter</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Amount Range</label>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="All Amounts" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Amounts</SelectItem>
-                <SelectItem value="0-50">$0 - $50</SelectItem>
-                <SelectItem value="50-100">$50 - $100</SelectItem>
-                <SelectItem value="100-500">$100 - $500</SelectItem>
-                <SelectItem value="500+">$500+</SelectItem>
-              </SelectContent>
-            </Select>
+        </CardContent>
+      </Card>
+
+      {/* Results Info and Total Amount */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Showing {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, filteredPayments.length)} of {filteredPayments.length} payments
+        </p>
+        <div className="flex items-center space-x-4">
+          {(searchTerm || statusFilter !== "all" || methodFilter !== "all" || dateFromFilter || dateToFilter) && (
+            <Badge variant="outline">
+              {filteredPayments.length} filtered results
+            </Badge>
+          )}
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            Total Amount: <span className="text-green-600">${filteredTotals.totalAmount.toFixed(2)}</span>
           </div>
         </div>
       </div>
 
-      {/* Payments Table */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Provider</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredPayments.map((payment) => (
-              <tr key={payment.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
-                  {payment.transactionId}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {payment.customer}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {payment.provider}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {payment.service}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  ${payment.amount.toFixed(2)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[payment.status]}`}>
+      {/* Payments Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {paginatedPayments.map((payment) => (
+          <Card key={payment.id} className="hover:shadow-lg transition-shadow duration-200">
+            <CardContent className="p-6">
+              {/* Payment Header */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                    {getPaymentIcon(payment.method)}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{payment.transactionId}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{payment.service}</p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end space-y-1">
+                  <Badge className={statusColors[payment.status]}>
                     {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${methodColors[payment.method as keyof typeof methodColors] || 'bg-gray-100 text-gray-800'}`}>
+                  </Badge>
+                  <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                    ${payment.amount.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Details */}
+              <div className="space-y-3 mb-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Customer</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{payment.customer}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Provider</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{payment.provider}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Payment Method</span>
+                  <Badge variant="outline" className={methodColors[payment.method as keyof typeof methodColors]}>
                     {payment.method}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {payment.date}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button className="text-indigo-600 hover:text-indigo-900 mr-3">
-                    <Eye className="h-4 w-4" />
-                  </button>
-                  <button className="text-green-600 hover:text-green-900">
-                    <RefreshCw className="h-4 w-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Date</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(payment.date)}</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <Separator className="mb-4" />
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => handleViewPayment(payment)}
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  View Details
+                </Button>
+                {payment.status === 'pending' && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1" />
+                    Retry
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Summary Footer */}
-      <div className="mt-4 bg-white border border-gray-200 rounded-lg p-4">
-        <div className="flex justify-between items-center text-sm text-gray-600">
-          <span>Showing {filteredPayments.length} of {payments.length} payments</span>
-          <span>Total Amount: ${filteredPayments.reduce((sum, payment) => sum + payment.amount, 0).toFixed(2)}</span>
-        </div>
-      </div>
-    </>
+      {/* Empty State */}
+      {filteredPayments.length === 0 && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <CreditCard className="h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No payments found</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-center mb-4">
+              {searchTerm || statusFilter !== "all" || methodFilter !== "all" || dateFromFilter || dateToFilter
+                ? "Try adjusting your search or filter criteria."
+                : "No payments have been processed yet."}
+            </p>
+            {(searchTerm || statusFilter !== "all" || methodFilter !== "all" || dateFromFilter || dateToFilter) && (
+              <Button variant="outline" onClick={resetFilters}>
+                Clear all filters
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="w-10"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                  {totalPages > 5 && currentPage < totalPages - 2 && (
+                    <>
+                      <span className="px-2">...</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(totalPages)}
+                        className="w-10"
+                      >
+                        {totalPages}
+                      </Button>
+                    </>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Page {currentPage} of {totalPages}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* View Payment Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Payment Details</DialogTitle>
+          </DialogHeader>
+          {selectedPayment && (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xl">
+                    {getPaymentIcon(selectedPayment.method)}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{selectedPayment.transactionId}</h3>
+                    <p className="text-gray-600 dark:text-gray-400">{selectedPayment.service}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <Badge className={statusColors[selectedPayment.status]}>
+                    {selectedPayment.status.charAt(0).toUpperCase() + selectedPayment.status.slice(1)}
+                  </Badge>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-2">
+                    ${selectedPayment.amount.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              {/* Transaction Information */}
+              <div>
+                <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Transaction Information</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Transaction ID</p>
+                    <p className="font-mono text-gray-900 dark:text-gray-100">{selectedPayment.transactionId}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Payment ID</p>
+                    <p className="font-mono text-gray-900 dark:text-gray-100">{selectedPayment.id}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Payment Method</p>
+                    <Badge variant="outline" className={methodColors[selectedPayment.method as keyof typeof methodColors]}>
+                      {selectedPayment.method}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Date & Time</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{formatDate(selectedPayment.date)}</p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Customer Information */}
+              <div>
+                <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Customer Information</h4>
+                <div className="flex items-center space-x-3">
+                  <User className="h-4 w-4 text-gray-400" />
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{selectedPayment.customer}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Customer</p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Provider Information */}
+              <div>
+                <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Service Provider Information</h4>
+                <div className="flex items-center space-x-3">
+                  <User className="h-4 w-4 text-gray-400" />
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{selectedPayment.provider}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Service Provider</p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Service Details */}
+              <div>
+                <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Service Details</h4>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Service Type</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{selectedPayment.service}</p>
+                </div>
+              </div>
+
+              {selectedPayment.status === 'failed' && (
+                <>
+                  <Separator />
+                  <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <AlertCircle className="h-5 w-5 text-red-600" />
+                      <div>
+                        <p className="text-sm font-medium text-red-600">Payment Failed</p>
+                        <p className="text-sm text-red-600">This payment was not processed successfully. Please contact the customer or retry the payment.</p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+              Close
+            </Button>
+            {selectedPayment && selectedPayment.status === 'pending' && (
+              <Button>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry Payment
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
