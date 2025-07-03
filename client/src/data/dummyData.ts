@@ -250,7 +250,7 @@ export const bookings: BookingRecord[] = [
       name: 'John Davis',
       phone: '+1 (555) 987-6543',
     },
-    date: 'Jan 15, 2024',
+    date: '2024-01-15',
     time: '2:30 PM',
     amount: 120.00,
     status: 'completed',
@@ -269,7 +269,7 @@ export const bookings: BookingRecord[] = [
       name: 'Alex Martinez',
       phone: '+1 (555) 123-4567',
     },
-    date: 'Jan 16, 2024',
+    date: '2024-01-16',
     time: '10:00 AM',
     amount: 85.00,
     status: 'in-progress',
@@ -285,10 +285,235 @@ export const bookings: BookingRecord[] = [
       description: 'Full service wash',
     },
     provider: null,
-    date: 'Jan 17, 2024',
+    date: '2024-01-17',
     time: '3:00 PM',
     amount: 45.00,
     status: 'pending',
+  },
+  {
+    id: 'BK-2024-004',
+    customer: {
+      name: 'Emily Brown',
+      phone: '+1 (555) 456-7890',
+    },
+    service: {
+      name: 'House Cleaning',
+      description: 'Deep cleaning service',
+    },
+    provider: {
+      name: 'Rachel Wilson',
+      phone: '+1 (555) 456-7890',
+    },
+    date: '2024-01-18',
+    time: '9:00 AM',
+    amount: 150.00,
+    status: 'completed',
+  },
+  {
+    id: 'BK-2024-005',
+    customer: {
+      name: 'David Wilson',
+      phone: '+1 (555) 567-8901',
+    },
+    service: {
+      name: 'Gardening',
+      description: 'Lawn mowing and trimming',
+    },
+    provider: {
+      name: 'David Park',
+      phone: '+1 (555) 456-7890',
+    },
+    date: '2024-01-19',
+    time: '8:00 AM',
+    amount: 75.00,
+    status: 'completed',
+  },
+  {
+    id: 'BK-2024-006',
+    customer: {
+      name: 'Lisa Garcia',
+      phone: '+1 (555) 678-9012',
+    },
+    service: {
+      name: 'Handyman Service',
+      description: 'Furniture assembly',
+    },
+    provider: {
+      name: 'Sarah Chen',
+      phone: '+1 (555) 345-6789',
+    },
+    date: '2024-01-20',
+    time: '1:00 PM',
+    amount: 90.00,
+    status: 'in-progress',
+  },
+  {
+    id: 'BK-2024-007',
+    customer: {
+      name: 'Robert Martinez',
+      phone: '+1 (555) 789-0123',
+    },
+    service: {
+      name: 'Electrical Service',
+      description: 'Light fixture installation',
+    },
+    provider: {
+      name: 'Tom Wilson',
+      phone: '+1 (555) 678-9012',
+    },
+    date: '2024-01-21',
+    time: '11:00 AM',
+    amount: 110.00,
+    status: 'cancelled',
+  },
+  {
+    id: 'BK-2024-008',
+    customer: {
+      name: 'Jennifer Lee',
+      phone: '+1 (555) 890-1234',
+    },
+    service: {
+      name: 'Car Wash',
+      description: 'Premium wash & wax',
+    },
+    provider: {
+      name: 'Carlos Gomez',
+      phone: '+1 (555) 890-1234',
+    },
+    date: '2024-01-22',
+    time: '4:00 PM',
+    amount: 65.00,
+    status: 'completed',
+  },
+  {
+    id: 'BK-2024-009',
+    customer: {
+      name: 'Michael Thompson',
+      phone: '+1 (555) 901-2345',
+    },
+    service: {
+      name: 'Plumbing Service',
+      description: 'Bathroom faucet repair',
+    },
+    provider: {
+      name: 'Lisa Anderson',
+      phone: '+1 (555) 789-0123',
+    },
+    date: '2024-01-23',
+    time: '3:30 PM',
+    amount: 95.00,
+    status: 'pending',
+  },
+  {
+    id: 'BK-2024-010',
+    customer: {
+      name: 'Amanda Clark',
+      phone: '+1 (555) 012-3456',
+    },
+    service: {
+      name: 'House Cleaning',
+      description: 'Weekly cleaning service',
+    },
+    provider: {
+      name: 'Emma Rodriguez',
+      phone: '+1 (555) 567-8901',
+    },
+    date: '2024-01-24',
+    time: '10:30 AM',
+    amount: 125.00,
+    status: 'in-progress',
+  },
+  {
+    id: 'BK-2024-011',
+    customer: {
+      name: 'Kevin White',
+      phone: '+1 (555) 123-4567',
+    },
+    service: {
+      name: 'Handyman Service',
+      description: 'Door repair and painting',
+    },
+    provider: {
+      name: 'Jennifer Taylor',
+      phone: '+1 (555) 901-2345',
+    },
+    date: '2024-01-25',
+    time: '2:00 PM',
+    amount: 180.00,
+    status: 'completed',
+  },
+  {
+    id: 'BK-2024-012',
+    customer: {
+      name: 'Rachel Adams',
+      phone: '+1 (555) 234-5678',
+    },
+    service: {
+      name: 'Gardening',
+      description: 'Garden maintenance',
+    },
+    provider: null,
+    date: '2024-01-26',
+    time: '9:30 AM',
+    amount: 85.00,
+    status: 'pending',
+  },
+  {
+    id: 'BK-2024-013',
+    customer: {
+      name: 'Christopher Moore',
+      phone: '+1 (555) 345-6789',
+    },
+    service: {
+      name: 'Electrical Service',
+      description: 'Panel upgrade consultation',
+    },
+    provider: {
+      name: 'Alex Martinez',
+      phone: '+1 (555) 123-4567',
+    },
+    date: '2024-01-27',
+    time: '1:30 PM',
+    amount: 200.00,
+    status: 'in-progress',
+  },
+  {
+    id: 'BK-2024-014',
+    customer: {
+      name: 'Michelle Johnson',
+      phone: '+1 (555) 456-7890',
+    },
+    service: {
+      name: 'Car Wash',
+      description: 'Basic wash service',
+    },
+    provider: {
+      name: 'Mike Thompson',
+      phone: '+1 (555) 234-5678',
+    },
+    date: '2024-01-28',
+    time: '11:30 AM',
+    amount: 35.00,
+    status: 'completed',
+  },
+  {
+    id: 'BK-2024-015',
+    customer: {
+      name: 'Daniel Rodriguez',
+      phone: '+1 (555) 567-8901',
+    },
+    service: {
+      name: 'Plumbing Service',
+      description: 'Toilet installation',
+    },
+    provider: {
+      name: 'John Davis',
+      phone: '+1 (555) 987-6543',
+    },
+    date: '2024-01-29',
+    time: '4:30 PM',
+    amount: 220.00,
+    status: 'cancelled',
   },
 ];
 
