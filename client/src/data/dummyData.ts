@@ -1,0 +1,301 @@
+import { DashboardStats, RecentBooking, TopProvider, Provider, BookingRecord, CustomerRecord, PaymentRecord, ReviewRecord, SupportTicketRecord, CategoryRecord } from '@/types';
+
+export const dashboardStats: DashboardStats = {
+  totalBookings: 1247,
+  totalRevenue: 89432,
+  activeProviders: 284,
+  totalCustomers: 3128,
+};
+
+export const recentBookings: RecentBooking[] = [
+  {
+    id: '1',
+    service: 'Plumbing Service',
+    customer: 'John Smith - 2 hours ago',
+    status: 'completed',
+    time: '2 hours ago',
+    icon: 'wrench',
+  },
+  {
+    id: '2',
+    service: 'Electrical Repair',
+    customer: 'Sarah Johnson - 4 hours ago',
+    status: 'in-progress',
+    time: '4 hours ago',
+    icon: 'zap',
+  },
+  {
+    id: '3',
+    service: 'Car Wash',
+    customer: 'Mike Davis - 6 hours ago',
+    status: 'pending',
+    time: '6 hours ago',
+    icon: 'car',
+  },
+];
+
+export const topProviders: TopProvider[] = [
+  {
+    id: '1',
+    name: 'Alex Martinez',
+    initials: 'AM',
+    rating: 4.9,
+    category: 'Electrician',
+    earnings: 2840,
+    bgColor: 'bg-primary',
+  },
+  {
+    id: '2',
+    name: 'John Davis',
+    initials: 'JD',
+    rating: 4.8,
+    category: 'Plumber',
+    earnings: 2650,
+    bgColor: 'bg-blue-500',
+  },
+  {
+    id: '3',
+    name: 'Rachel Wilson',
+    initials: 'RW',
+    rating: 4.7,
+    category: 'House Cleaning',
+    earnings: 2420,
+    bgColor: 'bg-purple-500',
+  },
+];
+
+export const providers: Provider[] = [
+  {
+    id: '1',
+    name: 'Alex Martinez',
+    email: 'alex.martinez@email.com',
+    phone: '+1 (555) 123-4567',
+    category: 'Electrician',
+    experience: 5,
+    rating: 4.9,
+    reviewCount: 142,
+    jobsCompleted: 187,
+    status: 'active',
+    initials: 'AM',
+    bgColor: 'bg-primary',
+  },
+  {
+    id: '2',
+    name: 'John Davis',
+    email: 'john.davis@email.com',
+    phone: '+1 (555) 987-6543',
+    category: 'Plumber',
+    experience: 8,
+    rating: 4.8,
+    reviewCount: 203,
+    jobsCompleted: 256,
+    status: 'active',
+    initials: 'JD',
+    bgColor: 'bg-blue-500',
+  },
+  {
+    id: '3',
+    name: 'Rachel Wilson',
+    email: 'rachel.wilson@email.com',
+    phone: '+1 (555) 456-7890',
+    category: 'House Cleaning',
+    experience: 3,
+    rating: 4.7,
+    reviewCount: 89,
+    jobsCompleted: 124,
+    status: 'pending',
+    initials: 'RW',
+    bgColor: 'bg-purple-500',
+  },
+];
+
+export const bookings: BookingRecord[] = [
+  {
+    id: 'BK-2024-001',
+    customer: {
+      name: 'John Smith',
+      phone: '+1 (555) 123-4567',
+    },
+    service: {
+      name: 'Plumbing Service',
+      description: 'Kitchen sink repair',
+    },
+    provider: {
+      name: 'John Davis',
+      phone: '+1 (555) 987-6543',
+    },
+    date: 'Jan 15, 2024',
+    time: '2:30 PM',
+    amount: 120.00,
+    status: 'completed',
+  },
+  {
+    id: 'BK-2024-002',
+    customer: {
+      name: 'Sarah Johnson',
+      phone: '+1 (555) 234-5678',
+    },
+    service: {
+      name: 'Electrical Repair',
+      description: 'Outlet installation',
+    },
+    provider: {
+      name: 'Alex Martinez',
+      phone: '+1 (555) 123-4567',
+    },
+    date: 'Jan 16, 2024',
+    time: '10:00 AM',
+    amount: 85.00,
+    status: 'in-progress',
+  },
+  {
+    id: 'BK-2024-003',
+    customer: {
+      name: 'Mike Davis',
+      phone: '+1 (555) 345-6789',
+    },
+    service: {
+      name: 'Car Wash',
+      description: 'Full service wash',
+    },
+    provider: null,
+    date: 'Jan 17, 2024',
+    time: '3:00 PM',
+    amount: 45.00,
+    status: 'pending',
+  },
+];
+
+export const customers: CustomerRecord[] = [
+  {
+    id: '1',
+    name: 'John Smith',
+    email: 'john.smith@email.com',
+    phone: '+1 (555) 123-4567',
+    registrationDate: 'Dec 15, 2023',
+    totalBookings: 12,
+    totalSpending: 1245.00,
+    lastActivity: '2 days ago',
+    status: 'active',
+  },
+  {
+    id: '2',
+    name: 'Sarah Johnson',
+    email: 'sarah.johnson@email.com',
+    phone: '+1 (555) 234-5678',
+    registrationDate: 'Nov 28, 2023',
+    totalBookings: 8,
+    totalSpending: 680.00,
+    lastActivity: '5 days ago',
+    status: 'active',
+  },
+  {
+    id: '3',
+    name: 'Mike Davis',
+    email: 'mike.davis@email.com',
+    phone: '+1 (555) 345-6789',
+    registrationDate: 'Jan 10, 2024',
+    totalBookings: 3,
+    totalSpending: 245.00,
+    lastActivity: '1 day ago',
+    status: 'active',
+  },
+];
+
+export const payments: PaymentRecord[] = [
+  {
+    id: 'PAY-001',
+    transactionId: 'TXN-2024-001',
+    customer: 'John Smith',
+    provider: 'John Davis',
+    service: 'Plumbing Service',
+    amount: 120.00,
+    status: 'completed',
+    method: 'Credit Card',
+    date: 'Jan 15, 2024',
+  },
+  {
+    id: 'PAY-002',
+    transactionId: 'TXN-2024-002',
+    customer: 'Sarah Johnson',
+    provider: 'Alex Martinez',
+    service: 'Electrical Repair',
+    amount: 85.00,
+    status: 'pending',
+    method: 'PayPal',
+    date: 'Jan 16, 2024',
+  },
+];
+
+export const reviews: ReviewRecord[] = [
+  {
+    id: '1',
+    customer: 'John Smith',
+    provider: 'John Davis',
+    service: 'Plumbing Service',
+    rating: 5,
+    comment: 'Excellent work! Very professional and timely.',
+    date: 'Jan 15, 2024',
+  },
+  {
+    id: '2',
+    customer: 'Sarah Johnson',
+    provider: 'Alex Martinez',
+    service: 'Electrical Repair',
+    rating: 4,
+    comment: 'Good service, arrived on time and fixed the issue.',
+    date: 'Jan 10, 2024',
+  },
+];
+
+export const supportTickets: SupportTicketRecord[] = [
+  {
+    id: 'TICKET-001',
+    user: 'John Smith',
+    userType: 'customer',
+    subject: 'Payment issue with booking #BK-2024-001',
+    status: 'open',
+    priority: 'high',
+    date: 'Jan 16, 2024',
+  },
+  {
+    id: 'TICKET-002',
+    user: 'Alex Martinez',
+    userType: 'provider',
+    subject: 'Account verification documents',
+    status: 'in-progress',
+    priority: 'medium',
+    date: 'Jan 14, 2024',
+  },
+];
+
+export const categories: CategoryRecord[] = [
+  {
+    id: '1',
+    name: 'Electrician',
+    description: 'Electrical repairs and installations',
+    providerCount: 45,
+    isActive: true,
+  },
+  {
+    id: '2',
+    name: 'Plumber',
+    description: 'Plumbing services and repairs',
+    providerCount: 38,
+    isActive: true,
+  },
+  {
+    id: '3',
+    name: 'House Cleaning',
+    description: 'Residential cleaning services',
+    providerCount: 62,
+    isActive: true,
+  },
+  {
+    id: '4',
+    name: 'Car Wash',
+    description: 'Vehicle cleaning and detailing',
+    providerCount: 23,
+    isActive: true,
+  },
+];
