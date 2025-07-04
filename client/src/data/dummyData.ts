@@ -7,6 +7,49 @@ export const dashboardStats: DashboardStats = {
   totalCustomers: 3128,
 };
 
+// Enhanced dashboard data for charts and analytics
+export const monthlyRevenueData = [
+  { month: 'Jan', revenue: 45000, bookings: 180 },
+  { month: 'Feb', revenue: 52000, bookings: 210 },
+  { month: 'Mar', revenue: 48000, bookings: 195 },
+  { month: 'Apr', revenue: 61000, bookings: 245 },
+  { month: 'May', revenue: 58000, bookings: 235 },
+  { month: 'Jun', revenue: 67000, bookings: 270 },
+  { month: 'Jul', revenue: 75000, bookings: 290 },
+  { month: 'Aug', revenue: 72000, bookings: 285 },
+  { month: 'Sep', revenue: 79000, bookings: 310 },
+  { month: 'Oct', revenue: 84000, bookings: 325 },
+  { month: 'Nov', revenue: 89000, bookings: 340 },
+  { month: 'Dec', revenue: 92000, bookings: 355 },
+];
+
+export const serviceBreakdownData = [
+  { name: 'Plumbing', value: 28, color: '#3B82F6' },
+  { name: 'Electrical', value: 24, color: '#EF4444' },
+  { name: 'Cleaning', value: 18, color: '#10B981' },
+  { name: 'Car Wash', value: 15, color: '#F59E0B' },
+  { name: 'Handyman', value: 10, color: '#8B5CF6' },
+  { name: 'Gardening', value: 5, color: '#06B6D4' },
+];
+
+export const weeklyBookingsData = [
+  { day: 'Mon', bookings: 45 },
+  { day: 'Tue', bookings: 52 },
+  { day: 'Wed', bookings: 48 },
+  { day: 'Thu', bookings: 61 },
+  { day: 'Fri', bookings: 58 },
+  { day: 'Sat', bookings: 67 },
+  { day: 'Sun', bookings: 35 },
+];
+
+export const providerPerformanceData = [
+  { name: 'Alex Martinez', rating: 4.9, jobs: 187, earnings: 12500 },
+  { name: 'John Davis', rating: 4.8, jobs: 156, earnings: 11200 },
+  { name: 'Sarah Chen', rating: 4.9, jobs: 203, earnings: 15800 },
+  { name: 'Rachel Wilson', rating: 4.7, jobs: 124, earnings: 8900 },
+  { name: 'Mike Thompson', rating: 4.6, jobs: 134, earnings: 9800 },
+];
+
 export const recentBookings: RecentBooking[] = [
   {
     id: '1',
