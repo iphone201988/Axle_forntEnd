@@ -45,31 +45,28 @@ function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for existing session on app load
+  // Check for existing session from localStorage
   useEffect(() => {
-    const checkAuth = async () => {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
       try {
-        const response = await fetch('/api/auth/me');
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-        }
+        setUser(JSON.parse(savedUser));
       } catch (error) {
-        console.log('Not authenticated');
-      } finally {
-        setIsLoading(false);
+        console.error('Error parsing saved user data');
+        localStorage.removeItem('currentUser');
       }
-    };
-
-    checkAuth();
+    }
+    setIsLoading(false);
   }, []);
 
   const handleLogin = (userData: User) => {
     setUser(userData);
+    localStorage.setItem('currentUser', JSON.stringify(userData));
   };
 
   const handleLogout = () => {
     setUser(null);
+    localStorage.removeItem('currentUser');
   };
 
   if (isLoading) {

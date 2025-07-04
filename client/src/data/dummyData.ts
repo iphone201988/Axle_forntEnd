@@ -50,6 +50,50 @@ export const providerPerformanceData = [
   { name: 'Mike Thompson', rating: 4.6, jobs: 134, earnings: 9800 },
 ];
 
+// Sample notification data for UI
+export const sampleNotifications = [
+  {
+    id: 1,
+    title: 'New Service Provider Application',
+    message: 'Alex Martinez has submitted a new electrician provider application for review',
+    type: 'info',
+    isRead: false,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 2,
+    title: 'Payment Received',
+    message: 'Payment of $150.00 received for booking #BK-2024-001 from John Smith',
+    type: 'success',
+    isRead: false,
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
+  },
+  {
+    id: 3,
+    title: 'High Priority Support Ticket',
+    message: 'Customer complaint: Service provider was late. Ticket #ST-001 requires immediate attention',
+    type: 'warning',
+    isRead: true,
+    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() // 4 hours ago
+  },
+  {
+    id: 4,
+    title: 'System Maintenance Notice',
+    message: 'Scheduled platform maintenance tonight at 2:00 AM EST. Expected downtime: 30 minutes',
+    type: 'info',
+    isRead: false,
+    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString() // 6 hours ago
+  },
+  {
+    id: 5,
+    title: 'Monthly Revenue Report',
+    message: 'Your monthly revenue report is ready. Total revenue increased by 12% this month',
+    type: 'success',
+    isRead: true,
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // 1 day ago
+  }
+];
+
 export const recentBookings: RecentBooking[] = [
   {
     id: '1',

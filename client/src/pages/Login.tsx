@@ -34,39 +34,32 @@ export default function Login({ onLogin }: LoginProps) {
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+    
+    // Simulate loading delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Simple dummy authentication
+    if (data.email === "admin@admin.com" && data.password === "admin123") {
+      const dummyUser = {
+        id: 1,
+        email: "admin@admin.com",
+        name: "Admin User",
+        role: "Super Admin"
+      };
+      onLogin(dummyUser);
+      toast({
+        title: "Success",
+        description: "Logged in successfully",
       });
-
-      if (response.ok) {
-        const user = await response.json();
-        onLogin(user);
-        toast({
-          title: "Success",
-          description: "Logged in successfully",
-        });
-      } else {
-        const error = await response.json();
-        toast({
-          title: "Error",
-          description: error.error || "Login failed",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+    } else {
       toast({
         title: "Error",
-        description: "Network error occurred",
+        description: "Invalid credentials. Use admin@admin.com / admin123",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
+    
+    setIsLoading(false);
   };
 
   return (

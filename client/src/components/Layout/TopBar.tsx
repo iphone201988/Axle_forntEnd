@@ -3,9 +3,8 @@ import { Bell, Menu, User, LogOut, Settings, ChevronDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { sampleNotifications } from "@/data/dummyData";
 
 interface TopBarProps {
   title: string;
@@ -27,49 +26,27 @@ interface Notification {
 export default function TopBar({ title, onMobileMenuToggle, isCollapsed, user, onLogout }: TopBarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>(sampleNotifications);
   const notificationRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  // Fetch notifications
-  const { data: notifications = [] } = useQuery({
-    queryKey: ['/api/notifications'],
-    enabled: !!user,
-  });
-
-  // Mark notification as read mutation
-  const markAsReadMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await fetch(`/api/notifications/${id}/read`, {
-        method: 'PATCH',
-      });
-      if (!response.ok) throw new Error('Failed to mark as read');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
-    },
-  });
+  // Mark notification as read
+  const markAsRead = (id: number) => {
+    setNotifications(prev =>
+      prev.map(notification =>
+        notification.id === id ? { ...notification, isRead: true } : notification
+      )
+    );
+  };
 
   // Handle logout
-  const handleLogout = async () => {
-    try {
-      const response = await fetch('/api/auth/logout', { method: 'POST' });
-      if (response.ok) {
-        onLogout();
-        toast({
-          title: "Success",
-          description: "Logged out successfully",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to logout",
-        variant: "destructive",
-      });
-    }
+  const handleLogout = () => {
+    onLogout();
+    toast({
+      title: "Success",
+      description: "Logged out successfully",
+    });
   };
 
   // Close dropdowns when clicking outside
@@ -87,7 +64,7 @@ export default function TopBar({ title, onMobileMenuToggle, isCollapsed, user, o
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const unreadNotifications = (notifications as Notification[]).filter((n: Notification) => !n.isRead);
+  const unreadNotifications = notifications.filter((n: Notification) => !n.isRead);
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
@@ -131,18 +108,18 @@ export default function TopBar({ title, onMobileMenuToggle, isCollapsed, user, o
                       <h3 className="font-semibold text-gray-900">Notifications</h3>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
-                      {(notifications as Notification[]).length === 0 ? (
+                      {notifications.length === 0 ? (
                         <div className="p-4 text-center text-gray-500">
                           No notifications
                         </div>
                       ) : (
-                        (notifications as Notification[]).slice(0, 5).map((notification: Notification) => (
+                        notifications.slice(0, 5).map((notification: Notification) => (
                           <div
                             key={notification.id}
                             className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${
                               !notification.isRead ? 'bg-blue-50' : ''
                             }`}
-                            onClick={() => markAsReadMutation.mutate(notification.id)}
+                            onClick={() => markAsRead(notification.id)}
                           >
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
