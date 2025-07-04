@@ -12,9 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export default function Settings() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [generalSettings, setGeneralSettings] = useState({
-    platformName: "ServiceHub",
+    platformName: "Axle",
     platformDescription: "On-demand service platform connecting customers with verified service providers",
-    supportEmail: "support@servicehub.com",
+    supportEmail: "support@Axle.com",
     timezone: "UTC-5",
     language: "en",
     maintenanceMode: false,
@@ -34,7 +34,7 @@ export default function Settings() {
     sessionTimeout: "24",
     passwordComplexity: "medium",
     apiRateLimit: "1000",
-    allowedDomains: "servicehub.com\napi.servicehub.com",
+    allowedDomains: "Axle.com\napi.Axle.com",
   });
 
   const [paymentSettings, setPaymentSettings] = useState({

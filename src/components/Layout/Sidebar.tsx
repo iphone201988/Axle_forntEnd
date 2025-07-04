@@ -47,7 +47,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               </div>
               {!isCollapsed && (
                 <h1 className="ml-3 text-xl font-semibold text-gray-900 transition-opacity duration-200">
-                  ServiceHub
+                  Axle
                 </h1>
               )}
             </div>
