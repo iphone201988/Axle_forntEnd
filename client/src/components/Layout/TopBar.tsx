@@ -1,12 +1,94 @@
-import { Bell, Menu, User } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Bell, Menu, User, LogOut, Settings, ChevronDown } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface TopBarProps {
   title: string;
   onMobileMenuToggle: () => void;
   isCollapsed: boolean;
+  user?: any;
+  onLogout: () => void;
 }
 
-export default function TopBar({ title, onMobileMenuToggle, isCollapsed }: TopBarProps) {
+interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  type: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export default function TopBar({ title, onMobileMenuToggle, isCollapsed, user, onLogout }: TopBarProps) {
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch notifications
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['/api/notifications'],
+    enabled: !!user,
+  });
+
+  // Mark notification as read mutation
+  const markAsReadMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/notifications/${id}/read`, {
+        method: 'PATCH',
+      });
+      if (!response.ok) throw new Error('Failed to mark as read');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+    },
+  });
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', { method: 'POST' });
+      if (response.ok) {
+        onLogout();
+        toast({
+          title: "Success",
+          description: "Logged out successfully",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to logout",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const unreadNotifications = (notifications as Notification[]).filter((n: Notification) => !n.isRead);
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
@@ -28,22 +110,112 @@ export default function TopBar({ title, onMobileMenuToggle, isCollapsed }: TopBa
           
           <div className="flex items-center space-x-2 sm:space-x-4">
             {/* Notifications */}
-            <div className="relative">
-              <button className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary rounded-full">
+            <div className="relative" ref={notificationRef}>
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary rounded-full relative"
+              >
                 <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
-                <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
+                {unreadNotifications.length > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center p-0">
+                    {unreadNotifications.length}
+                  </Badge>
+                )}
               </button>
+
+              {/* Notifications Dropdown */}
+              {showNotifications && (
+                <Card className="absolute right-0 mt-2 w-80 shadow-lg border-0 z-50">
+                  <CardContent className="p-0">
+                    <div className="p-4 border-b">
+                      <h3 className="font-semibold text-gray-900">Notifications</h3>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {(notifications as Notification[]).length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">
+                          No notifications
+                        </div>
+                      ) : (
+                        (notifications as Notification[]).slice(0, 5).map((notification: Notification) => (
+                          <div
+                            key={notification.id}
+                            className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${
+                              !notification.isRead ? 'bg-blue-50' : ''
+                            }`}
+                            onClick={() => markAsReadMutation.mutate(notification.id)}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-gray-900">
+                                  {notification.title}
+                                </p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  {notification.message}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-2">
+                                  {new Date(notification.createdAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                              {!notification.isRead && (
+                                <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1"></div>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
             
             {/* User Profile */}
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="hidden sm:block text-right">
-                <p className="text-sm font-medium text-gray-900">Admin User</p>
-                <p className="text-xs text-gray-500">Super Admin</p>
-              </div>
-              <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-400 transition-colors">
-                <User className="h-4 w-4 text-gray-600" />
-              </div>
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center space-x-2 sm:space-x-3 hover:bg-gray-50 rounded-lg p-2 transition-colors"
+              >
+                <div className="hidden sm:block text-right">
+                  <p className="text-sm font-medium text-gray-900">{user?.name || 'Admin User'}</p>
+                  <p className="text-xs text-gray-500">{user?.role || 'Super Admin'}</p>
+                </div>
+                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+                  <User className="h-4 w-4 text-white" />
+                </div>
+                <ChevronDown className="h-4 w-4 text-gray-400" />
+              </button>
+
+              {/* User Menu Dropdown */}
+              {showUserMenu && (
+                <Card className="absolute right-0 mt-2 w-48 shadow-lg border-0 z-50">
+                  <CardContent className="p-2">
+                    <div className="p-2 border-b">
+                      <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                      <p className="text-xs text-gray-500">{user?.email}</p>
+                    </div>
+                    <div className="space-y-1 mt-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        Settings
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={handleLogout}
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Logout
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>

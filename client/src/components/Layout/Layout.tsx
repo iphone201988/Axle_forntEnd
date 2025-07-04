@@ -5,9 +5,11 @@ import TopBar from "./TopBar";
 interface LayoutProps {
   children: ReactNode;
   title: string;
+  user?: any;
+  onLogout: () => void;
 }
 
-export default function Layout({ children, title }: LayoutProps) {
+export default function Layout({ children, title, user, onLogout }: LayoutProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -86,6 +88,8 @@ export default function Layout({ children, title }: LayoutProps) {
           title={title} 
           onMobileMenuToggle={toggleSidebar}
           isCollapsed={isSidebarCollapsed}
+          user={user}
+          onLogout={onLogout}
         />
         
         <main className="flex-1 relative overflow-y-auto focus:outline-none bg-gray-50">
